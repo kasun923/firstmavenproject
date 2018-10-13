@@ -36,11 +36,10 @@ pipeline{
                 echo 'Deploying....'
             }
         }
-    }
-
-    node {
         stage("Post to Slack") {
+            steps{
             notifySlack("Success!", slackNotificationChannel, [])
+            }
         }
     }
 }
