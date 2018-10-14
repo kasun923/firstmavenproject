@@ -1,6 +1,8 @@
 #!/usr/bin/env groovy
 
 import groovy.json.JsonOutput
+import hudson.tasks.test.AbstractTestResultAction
+
 
 def slackNotificationChannel = '#jenkinscrazy'     // ex: = "builds"
 
@@ -18,12 +20,117 @@ def notifySlack(text, channel, attachments) {
     sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slackURL}"
 }
 
+@NonCPS
+def getTestSummary = { ->
+    def testResultAction = currentBuild.rawBuild.getAction(AbstractTestResultAction.class)
+    def summary = ""
+
+    if (testResultAction != null) {
+        total = testResultAction.getTotalCount()
+        failed = testResultAction.getFailCount()
+        skipped = testResultAction.getSkipCount()
+
+        summary = "Passed: " + (total - failed - skipped)
+        summary = summary + (", Failed: " + failed)
+        summary = summary + (", Skipped: " + skipped)
+    } else {
+        summary = "No tests found"
+    }
+    return summary
+}
+
+
+@NonCPS
+def getFailedTests = { ->
+    def testResultAction = currentBuild.rawBuild.getAction(AbstractTestResultAction.class)
+    def failedTestsString = "```"
+
+    if (testResultAction != null) {
+        def failedTests = testResultAction.getFailedTests()
+
+        if (failedTests.size() > 9) {
+            failedTests = failedTests.subList(0, 8)
+        }
+
+        for(CaseResult cr : failedTests) {
+            failedTestsString = failedTestsString + "${cr.getFullDisplayName()}:\n${cr.getErrorDetails()}\n\n"
+        }
+        failedTestsString = failedTestsString + "```"
+    }
+    return failedTestsString
+}
+
+def populateGlobalVariables = {
+    testSummary = getTestSummary()
+}
+
 pipeline{
     agent any
     stages {
         stage('Build') {
             steps {
                 echo 'Building..'
+                //maven build here
+                sh 'mvn test -Dtest=testClass'
+
+                populateGlobalVariables();
+
+                def buildColor = currentBuild.result == null ? "good" : "warning"
+                def buildStatus = currentBuild.result == null ? "Success" : currentBuild.result
+                def jobName = "${env.JOB_NAME}"
+
+                if (failed > 0) {
+                    buildStatus = "Failed"
+                    buildColor = "danger"
+//                    def failedTestsString = getFailedTests()
+
+                    notifySlack("", slackNotificationChannel, [
+                            [
+                                    title: "${jobName}, build #${env.BUILD_NUMBER}",
+                                    title_link: "${env.BUILD_URL}",
+                                    color: "${buildColor}",
+                                    text: "${buildStatus}\n${author}",
+                                    "mrkdwn_in": ["fields"],
+                                    fields: [
+                                            [
+                                                    title: "Branch",
+                                                    value: "${env.GIT_BRANCH}",
+                                                    short: true
+                                            ],
+                                            [
+                                                    title: "Test Results",
+                                                    value: "${testSummary}",
+                                                    short: true
+                                            ]
+                                    ]
+                            ]
+                    ])
+
+                }
+                else {
+                    notifySlack("", slackNotificationChannel, [
+                            [
+                                    title: "${jobName}, build #${env.BUILD_NUMBER}",
+                                    title_link: "${env.BUILD_URL}",
+                                    color: "${buildColor}",
+                                    author_name: "${author}",
+                                    text: "${buildStatus}\n${author}",
+                                    fields: [
+                                            [
+                                                    title: "Branch",
+                                                    value: "${env.GIT_BRANCH}",
+                                                    short: true
+                                            ],
+                                            [
+                                                    title: "Test Results",
+                                                    value: "${testSummary}",
+                                                    short: true
+                                            ]
+                                    ]
+                            ]
+                    ])
+
+                }
             }
         }
         stage('Test') {
