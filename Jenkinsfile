@@ -74,7 +74,10 @@ def populateGlobalVariables = {
 
 node{
         stage('Build') {
+            def mvn_version = 'M3'
+            withEnv( ["PATH+MAVEN=${tool mvn_version}/bin"] ){
             sh 'mvn test -Dtest=testClass'
+            }
             step echo 'Building..'
                 //maven build here
 
