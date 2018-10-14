@@ -73,9 +73,9 @@ def populateGlobalVariables = {
 //}
 
 node{
-    tools{
-        maven 'Maven 3.3.9'
-    }
+//    tools{
+//        maven 'Maven 3.3.9'
+//    }
         stage('Build') {
 
             sh '''
@@ -83,10 +83,10 @@ node{
                     echo "M2_HOME = ${M2_HOME}"
                 '''
             
-//            def mvn_version = 'M3'
-//            withEnv( ["PATH+MAVEN=${tool mvn_version}/bin"] ){
+            def mvn_version = 'Maven 3.3.9'
+            withEnv( ["PATH+MAVEN=${tool mvn_version}/bin"] ){
             sh 'mvn test -Dtest=testClass -X'
-//            }
+            }
             step echo 'Building..'
                 //maven build here
 
