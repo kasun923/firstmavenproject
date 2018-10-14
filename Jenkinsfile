@@ -69,10 +69,9 @@ def populateGlobalVariables = {
     testSummary = getTestSummary()
 }
 
-pipeline{
-    stages{
+node{
         stage('Build') {
-            steps {
+            step {
                 echo 'Building..'
                 //maven build here
                 sh 'mvn test -Dtest=testClass'
@@ -136,6 +135,5 @@ pipeline{
 
                 }
             }
-        }
     }
 }
