@@ -70,6 +70,7 @@ def populateGlobalVariables = {
 }
 
 node{
+    stages{
         stage('Build') {
             steps {
                 echo 'Building..'
@@ -136,4 +137,5 @@ node{
                 }
             }
         }
+    }
 }
