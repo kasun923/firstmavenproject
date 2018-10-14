@@ -69,7 +69,7 @@ def populateGlobalVariables = {
     testSummary = getTestSummary()
 }
 
-node{
+pipeline{
     stages{
         stage('Build') {
             steps {
