@@ -1,7 +1,10 @@
 #!/usr/bin/env groovy
 
 import groovy.json.JsonOutput
+import java.util.Optional
 import hudson.tasks.test.AbstractTestResultAction
+import hudson.model.Actionable
+
 def author = ""
 def message = ""
 def testSummary = ""
@@ -25,6 +28,7 @@ def notifySlack(text, channel, attachments) {
     sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slackURL}"
 }
 
+
 @NonCPS
 def getTestSummary = { ->
     def testResultAction = currentBuild.rawBuild.getAction(AbstractTestResultAction.class)
@@ -44,6 +48,9 @@ def getTestSummary = { ->
     return summary
 }
 
+def populateGlobalVariables = {
+    testSummary = getTestSummary()
+}
 
 //@NonCPS
 //def getFailedTests = { ->
@@ -65,16 +72,11 @@ def getTestSummary = { ->
 //    return failedTestsString
 //}
 
-def populateGlobalVariables = {
-    testSummary = getTestSummary()
-}
-
 node{
         stage('Build') {
-            step {
-                echo 'Building..'
+            sh 'mvn test -Dtest=testClass'
+            step echo 'Building..'
                 //maven build here
-                sh 'mvn test -Dtest=testClass'
 
                 populateGlobalVariables();
 
@@ -135,5 +137,4 @@ node{
 
                 }
             }
-    }
 }
