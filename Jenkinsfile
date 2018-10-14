@@ -2,7 +2,12 @@
 
 import groovy.json.JsonOutput
 import hudson.tasks.test.AbstractTestResultAction
-
+def author = ""
+def message = ""
+def testSummary = ""
+def total = 0
+def failed = 0
+def skipped = 0
 
 def slackNotificationChannel = '#jenkinscrazy'     // ex: = "builds"
 
@@ -129,21 +134,6 @@ node{
                     ])
 
                 }
-            }
-        }
-        stage('Test') {
-            steps {
-                echo 'Testing..'
-            }
-        }
-        stage('Deploy') {
-            steps {
-                echo 'Deploying....'
-            }
-        }
-        stage("Post to Slack") {
-            steps{
-                notifySlack("Success!", slackNotificationChannel, [])
             }
         }
 }
