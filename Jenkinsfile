@@ -85,7 +85,7 @@ node{
             
             def mvn_version = 'Maven 3.3.9'
             withEnv( ["PATH+MAVEN=${tool mvn_version}/bin"] ){
-            sh 'mvn test -Dtest=testClass -X'
+            sh 'mvn test -Dtest=testClass'
             }
             step echo 'Building..'
                 //maven build here
