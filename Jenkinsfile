@@ -64,9 +64,7 @@ def populateGlobalVariables = {
     testSummary = getTestSummary()
 }
 
-pipeline{
-    agent any
-    stages {
+node{
         stage('Build') {
             steps {
                 echo 'Building..'
@@ -148,5 +146,4 @@ pipeline{
                 notifySlack("Success!", slackNotificationChannel, [])
             }
         }
-    }
 }
